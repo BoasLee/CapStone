@@ -5,8 +5,8 @@ import gzip
 import shutil
 
 def main():
-    data_url = "https://www.isaacdwang.com/datasets/movies/"
-    #data_url = "https://datasets.imdbws.com/"
+    #data_url = "https://www.isaacdwang.com/datasets/movies/"
+    data_url = "https://datasets.imdbws.com/"
     download_path = "C:\\Users\\Boas\\Downloads\\movies_datasets"
     unzip_path = os.path.join(download_path, "un_zip data")
 
@@ -58,3 +58,4 @@ def unzip_data(download_path,unzip_path):
 
 if __name__ == "__main__":
     main()
+
