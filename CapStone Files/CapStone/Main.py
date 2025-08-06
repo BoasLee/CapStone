@@ -3,18 +3,10 @@ from bs4 import BeautifulSoup
 import os
 import gzip
 import shutil
-
-def main():
-    #data_url = "https://www.isaacdwang.com/datasets/movies/"
-    data_url = "https://datasets.imdbws.com/"
-    download_path = "C:\\Users\\Boas\\Downloads\\movies_datasets"
-    unzip_path = os.path.join(download_path, "un_zip data")
-
-    download_data(data_url, download_path)
-    unzip_data(download_path,unzip_path)
+import pandas as pd
 
 
-def download_data(url, download_path):
+def download_data(depth, url, download_path):
     response = requests.get(url)
 
     # Check if the request was successful
@@ -35,12 +27,13 @@ def download_data(url, download_path):
             if href.endswith('.tsv.gz'):
                 # Get the filename from the URL
                 filename = os.path.join(download_path, href.split('/')[-1])
-                if not os.path.exists(filename):
+                if not os.path.exists(filename) and not None:
                     file_response = requests.get(href, stream=True)
                     with open(filename, "wb") as f:
                         f.write(file_response.raw.data)
+                    log_message(filename, depth)
 
-def unzip_data(download_path,unzip_path):
+def unzip_data(depth, download_path,unzip_path):
     if not os.path.exists(unzip_path):
         os.makedirs(unzip_path)
 
@@ -51,10 +44,41 @@ def unzip_data(download_path,unzip_path):
             unzip_file = os.path.join(unzip_path, file)
             unzip_file = unzip_file.removesuffix('.gz')
             if not os.path.exists(unzip_file):
-                print(zip_file, "->", unzip_file)
+                log_message(str(zip_file + "->" + unzip_file), depth)
                 with gzip.open(zip_file, 'rb') as f_in:
                     with open(unzip_file, 'wb') as f_out:
                         shutil.copyfileobj(f_in, f_out)
+
+def log_file(file_name, process_function, *args):
+    print("************starting file: " + file_name + " ************")
+    process_function(1, *args)
+    print("************ending file: " + file_name + " ************")
+
+def log_message(message, depth=1):
+    print("\t" * depth + message)
+
+def read_csv_to_panda(file_location):
+    return pd.read_csv(file_location, delimiter='\t')
+
+def explode_data(df, field):
+    df[field] = df[field].str.split(',')
+    return df.explode(field).reset_index(drop=True)
+
+def main():
+
+    data_url = "https://www.isaacdwang.com/datasets/movies/"
+    #data_url = "https://datasets.imdbws.com/"
+    download_path = "C:\\Users\\Boas\\Downloads\\movies_datasets"
+    unzip_path = os.path.join(download_path, "un_zip data")
+
+    log_file( "Downloading", download_data, data_url, download_path)
+    log_file( "Unzip File", unzip_data, download_path,unzip_path)
+
+    df = read_csv_to_panda("C:\\Users\\Boas\\Downloads\\movies_datasets\\un_zip data\\test.tsv")
+    #df = explode_data(df,  "directors")
+    df = explode_data(df, "writers")
+    print(df)
+
 
 if __name__ == "__main__":
     main()
